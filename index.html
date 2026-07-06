@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl" id="html-root">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ULTRAKILL // خون سوخت است</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Vazirmatn:wght@400;500;600;700;800&family=Barlow+Condensed:ital,wght@0,400;0,500;0,600;0,700;1,500&family=JetBrains+Mono:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --void:#0b0b0d;
+    --void-2:#161316;
+    --blood:#d81e2c;
+    --blood-deep:#7a0f16;
+    --bone:#ece7da;
+    --bone-dim:#a9a397;
+    --steel:#4a5058;
+    --gold:#f2c14e;
+    --line: rgba(236,231,218,0.14);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0; background:var(--void); color:var(--bone);
+    font-family:'Vazirmatn','Barlow Condensed',sans-serif;
+    font-size:19px; line-height:1.85; overflow-x:hidden;
+  }
+  body.lang-en{ font-family:'Barlow Condensed', sans-serif; line-height:1.5; }
+  ::selection{ background:var(--blood); color:var(--bone); }
+  a{ color:inherit; }
+  h1,h2,h3{ margin:0; font-weight:800; }
+  body.lang-en h1, body.lang-en h2, body.lang-en h3{ font-family:'Anton', sans-serif; font-weight:400; text-transform:uppercase; }
+  .brand{ font-family:'Anton', sans-serif; direction:ltr; unicode-bidi:isolate; }
+  .ltr{ direction:ltr; unicode-bidi:isolate; display:inline-block; }
+  .eyebrow{
+    font-family:'JetBrains Mono', monospace; font-size:12px; letter-spacing:0.14em;
+    color:var(--blood); display:flex; align-items:center; gap:10px; text-transform:uppercase;
+  }
+  .eyebrow::before{ content:""; width:22px; height:2px; background:var(--blood); display:inline-block; }
+  .wrap{ max-width:1180px; margin:0 auto; padding:0 32px; }
+
+  .grain{ position:fixed; inset:0; pointer-events:none; z-index:2; opacity:0.05; mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+  .scanlines{ position:fixed; inset:0; pointer-events:none; z-index:2;
+    background:repeating-linear-gradient(to bottom, rgba(0,0,0,0) 0px, rgba(0,0,0,0) 2px, rgba(0,0,0,0.12) 3px, rgba(0,0,0,0) 4px); opacity:0.4; }
+
+  /* LANGUAGE TOGGLE */
+  #lang-toggle{
+    position:fixed; top:18px; left:50%; transform:translateX(-50%);
+    z-index:60; display:flex; background:rgba(11,11,13,0.8); border:1px solid var(--line);
+    backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); border-radius:999px; overflow:hidden;
+  }
+  #lang-toggle button{
+    font-family:'JetBrains Mono', monospace; font-size:12px; letter-spacing:0.08em;
+    background:transparent; border:none; color:var(--bone-dim); padding:9px 18px; cursor:pointer;
+    transition:color 0.2s ease, background 0.2s ease;
+  }
+  #lang-toggle button.active{ color:var(--void); background:var(--blood); font-weight:700; }
+  #lang-toggle button:hover:not(.active){ color:var(--bone); }
+
+  /* STYLE METER */
+  #style-meter{
+    position:fixed; top:50%; transform:translateY(-50%); z-index:50;
+    display:flex; flex-direction:column; align-items:center; gap:10px; padding:16px 10px;
+    background:rgba(11,11,13,0.72); border:1px solid var(--line);
+    backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+    transition:border-color 0.4s ease, box-shadow 0.4s ease, left 0.2s ease, right 0.2s ease;
+    right:18px; direction:ltr;
+  }
+  body.lang-en #style-meter{ right:18px; left:auto; }
+  body.lang-fa #style-meter{ left:18px; right:auto; }
+  #style-meter .label{ font-family:'JetBrains Mono', monospace; font-size:9px; letter-spacing:0.2em; color:var(--bone-dim); writing-mode:vertical-rl; transform:rotate(180deg); }
+  #style-meter .rank{ font-family:'Anton', sans-serif; font-size:34px; line-height:1; color:var(--bone); text-shadow:0 0 14px rgba(216,30,44,0.6); transition:color 0.3s ease, text-shadow 0.3s ease, transform 0.2s ease; min-width:1.1em; text-align:center; }
+  #style-meter .bar-track{ width:4px; height:120px; background:rgba(236,231,218,0.1); position:relative; overflow:hidden; }
+  #style-meter .bar-fill{ position:absolute; bottom:0; left:0; width:100%; background:linear-gradient(to top, var(--blood-deep), var(--blood)); height:0%; transition:height 0.25s ease-out, background 0.3s ease; }
+  #style-meter.rank-sss{ border-color:var(--gold); box-shadow:0 0 24px rgba(242,193,78,0.35); }
+  #style-meter.rank-sss .rank{ color:var(--gold); text-shadow:0 0 18px rgba(242,193,78,0.75); }
+  #style-meter.rank-sss .bar-fill{ background:linear-gradient(to top, var(--blood), var(--gold)); }
+  #style-meter.pulse .rank{ animation:rankPulse 0.35s ease; }
+  @keyframes rankPulse{ 0%{ transform:scale(1.55); } 100%{ transform:scale(1); } }
+  @media (max-width:760px){ #style-meter{ padding:10px 6px; gap:6px; } #style-meter .rank{ font-size:22px; } #style-meter .bar-track{ height:70px; } #style-meter .label{ font-size:7px; } }
+
+  /* HERO */
+  .hero{ min-height:100vh; display:flex; flex-direction:column; justify-content:center; position:relative; padding:140px 0 80px; border-bottom:1px solid var(--line); overflow:hidden;
+    background:radial-gradient(ellipse 90% 60% at 50% 0%, rgba(216,30,44,0.16), transparent 60%), linear-gradient(180deg, #0b0b0d 0%, #0b0b0d 70%, var(--void-2) 100%); }
+  .hero-svg{ position:absolute; inset:0; z-index:0; opacity:0.5; }
+  .hero-svg svg{ width:100%; height:100%; }
+  .hero-inner{ position:relative; z-index:3; }
+  .hero .eyebrow{ margin-bottom:22px; }
+  .hero h1{ font-family:'Anton', sans-serif; direction:ltr; font-size:clamp(64px,13vw,168px); line-height:0.86; color:var(--bone);
+    text-shadow:3px 0 0 var(--blood), -3px 0 0 rgba(74,80,88,0.7); }
+  .hero h1 span{ display:block; }
+  .hero .sub{ margin-top:28px; max-width:640px; font-size:22px; color:var(--bone-dim); }
+  .hero .fine{ margin-top:56px; display:flex; gap:36px; flex-wrap:wrap; }
+  .hero .fine .item{ font-size:13px; color:var(--bone-dim); }
+  .hero .fine .item b{ display:block; color:var(--bone); font-size:16px; margin-top:4px; font-weight:700; }
+  .drip{ position:absolute; top:0; width:2px; background:var(--blood); opacity:0.55; animation:drip 3.2s linear infinite; }
+  @keyframes drip{ 0%{ height:0; opacity:0.7; } 70%{ opacity:0.5; } 100%{ height:140px; opacity:0; } }
+
+  section{ padding:110px 0; position:relative; border-bottom:1px solid var(--line); }
+  section.dark-red{ background:linear-gradient(180deg, var(--void) 0%, #1a0d0e 50%, var(--void) 100%); }
+  .section-head{ max-width:720px; margin-bottom:56px; }
+  .section-head h2{ font-size:clamp(34px,4.5vw,56px); margin-top:14px; line-height:1.25; }
+  .section-head p{ margin-top:18px; color:var(--bone-dim); font-size:19px; max-width:600px; }
+
+  /* SVG BANNER (replaces external images) */
+  .svg-banner{ position:relative; height:38vh; min-height:220px; overflow:hidden; border-bottom:1px solid var(--line); background:var(--void-2); }
+  .svg-banner svg{ width:100%; height:100%; display:block; }
+  .svg-banner .caption{ position:absolute; bottom:20px; inset-inline-start:32px; z-index:2; font-family:'JetBrains Mono', monospace; direction:ltr; font-size:11px; letter-spacing:0.1em; color:var(--bone-dim); }
+
+  .about-grid{ display:grid; grid-template-columns:1.1fr 0.9fr; gap:64px; align-items:start; }
+  .lede{ font-size:23px; color:var(--bone); }
+  .lede strong{ color:var(--blood); }
+  .stat-block{ border:1px solid var(--line); padding:28px; background:rgba(236,231,218,0.02); }
+  .stat-row{ display:flex; justify-content:space-between; gap:16px; padding:12px 0; border-bottom:1px solid var(--line); font-size:15px; }
+  .stat-row:last-child{ border-bottom:none; }
+  .stat-row .k{ color:var(--bone-dim); flex-shrink:0; }
+  .stat-row .v{ color:var(--bone); text-align:end; }
+  @media (max-width:860px){ .about-grid{ grid-template-columns:1fr; } }
+
+  /* STORY */
+  .story-list{ display:flex; flex-direction:column; gap:0; }
+  .story-beat{ display:grid; grid-template-columns:70px 1fr; gap:28px; padding:30px 0; border-top:1px solid var(--line); }
+  .story-beat:last-child{ border-bottom:1px solid var(--line); }
+  .story-beat .idx{ font-family:'JetBrains Mono', monospace; color:var(--blood); font-size:13px; direction:ltr; }
+  .story-beat h3{ font-size:26px; }
+  .story-beat p{ color:var(--bone-dim); font-size:17px; margin-top:10px; max-width:680px; }
+  @media (max-width:700px){ .story-beat{ grid-template-columns:1fr; gap:8px; } }
+
+  .weapon-list{ display:flex; flex-direction:column; }
+  .weapon{ display:grid; grid-template-columns:56px 90px 1fr 220px; gap:26px; align-items:center; padding:26px 0; border-top:1px solid var(--line); transition:background 0.2s ease; }
+  .weapon:last-child{ border-bottom:1px solid var(--line); }
+  .weapon:hover{ background:rgba(216,30,44,0.05); }
+  .weapon .icon{ width:44px; height:44px; }
+  .weapon .icon svg{ width:100%; height:100%; }
+  .weapon .num{ font-family:'JetBrains Mono', monospace; font-size:13px; color:var(--blood); direction:ltr; }
+  .weapon h3{ font-size:27px; color:var(--bone); font-weight:800; }
+  body.lang-en .weapon h3{ font-weight:400; }
+  .weapon .desc{ color:var(--bone-dim); font-size:16px; margin-top:6px; max-width:520px; }
+  .weapon .altfire{ margin-top:8px; font-size:13px; color:var(--gold); }
+  .meter-set{ display:flex; flex-direction:column; gap:10px; }
+  .meter{ display:flex; align-items:center; gap:10px; }
+  .meter .m-label{ width:62px; font-size:13px; color:var(--bone-dim); }
+  .meter .m-track{ flex:1; height:5px; background:rgba(236,231,218,0.08); position:relative; }
+  .meter .m-fill{ position:absolute; inset:0; background:var(--blood); width:var(--pct,50%); }
+  @media (max-width:760px){ .weapon{ grid-template-columns:44px 1fr; gap:12px; } .weapon .num{ display:none; } }
+
+  .layers{ display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:1px; background:var(--line); border:1px solid var(--line); }
+  .layer{ background:var(--void); padding:30px 26px; position:relative; min-height:220px; display:flex; flex-direction:column; justify-content:space-between; }
+  .layer .roman{ font-family:'JetBrains Mono', monospace; font-size:13px; color:var(--blood); direction:ltr; display:inline-block; }
+  .layer h3{ font-size:24px; margin-top:14px; color:var(--bone); font-weight:800; }
+  body.lang-en .layer h3{ font-weight:400; }
+  .layer p{ color:var(--bone-dim); font-size:15px; margin-top:10px; }
+  .layer .sin{ font-size:14px; color:var(--bone-dim); margin-top:18px; opacity:0.75; font-style:italic; }
+
+  .rank-explainer{ display:grid; grid-template-columns:repeat(7,1fr); gap:2px; margin-top:20px; }
+  .rank-explainer .cell{ background:var(--void-2); padding:20px 8px; text-align:center; border-top:2px solid var(--steel); }
+  .rank-explainer .cell.active-gold{ border-top-color:var(--gold); }
+  .rank-explainer .cell .letter{ font-family:'Anton', sans-serif; font-size:24px; direction:ltr; }
+  .rank-explainer .cell .name{ font-size:12px; color:var(--bone-dim); margin-top:6px; }
+  @media (max-width:760px){ .rank-explainer{ grid-template-columns:repeat(4,1fr); } }
+
+  .ost-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:24px; }
+  .ost-card{ border:1px solid var(--line); padding:26px; background:rgba(236,231,218,0.02); }
+  .ost-card .genre{ font-family:'JetBrains Mono', monospace; font-size:11px; color:var(--blood); direction:ltr; display:inline-block; }
+  .ost-card h3{ font-size:22px; margin-top:10px; font-weight:800; }
+  body.lang-en .ost-card h3{ font-weight:400; }
+  .ost-card p{ color:var(--bone-dim); font-size:15px; margin-top:8px; }
+
+  footer{ padding:80px 0 60px; text-align:center; }
+  footer .mark{ font-size:20px; font-weight:800; }
+  footer p{ color:var(--bone-dim); font-size:14px; margin-top:14px; }
+
+  @media (prefers-reduced-motion: reduce){ *{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; scroll-behavior:auto !important; } }
+  a:focus-visible, button:focus-visible{ outline:2px solid var(--blood); outline-offset:3px; }
+</style>
+</head>
+<body class="lang-fa">
+
+<div class="grain"></div>
+<div class="scanlines"></div>
+
+<div id="lang-toggle">
+  <button data-lang="fa" class="active">FA</button>
+  <button data-lang="en">EN</button>
+</div>
+
+<div id="style-meter" aria-hidden="true">
+  <span class="label">STYLE</span>
+  <div class="bar-track"><div class="bar-fill" id="bar-fill"></div></div>
+  <span class="rank" id="rank-letter">D</span>
+</div>
+
+<div id="app"></div>
+
+<script>
+/* ---------------- SVG ART (no external requests — nothing to fail to load) ---------------- */
+function svgHeroBg(){
+  return `<svg viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <radialGradient id="iris" cx="50%" cy="38%" r="55%">
+        <stop offset="0%" stop-color="#d81e2c" stop-opacity="0.55"/>
+        <stop offset="45%" stop-color="#7a0f16" stop-opacity="0.28"/>
+        <stop offset="100%" stop-color="#0b0b0d" stop-opacity="0"/>
+      </radialGradient>
+      <linearGradient id="fade" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#0b0b0d" stop-opacity="0"/>
+        <stop offset="100%" stop-color="#0b0b0d" stop-opacity="1"/>
+      </linearGradient>
+    </defs>
+    <circle cx="600" cy="300" r="380" fill="url(#iris)"/>
+    <circle cx="600" cy="300" r="140" fill="none" stroke="#d81e2c" stroke-opacity="0.35" stroke-width="1.5"/>
+    <circle cx="600" cy="300" r="210" fill="none" stroke="#d81e2c" stroke-opacity="0.2" stroke-width="1"/>
+    <circle cx="600" cy="300" r="60" fill="#d81e2c" fill-opacity="0.5"/>
+    <circle cx="600" cy="300" r="20" fill="#f2c14e" fill-opacity="0.8"/>
+    ${Array.from({length:14}).map((_,i)=>{
+      const a = (i/14)*Math.PI*2;
+      const x1 = 600+Math.cos(a)*230, y1=300+Math.sin(a)*230;
+      const x2 = 600+Math.cos(a)*400, y2=300+Math.sin(a)*400;
+      return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#4a5058" stroke-opacity="0.18" stroke-width="1"/>`;
+    }).join('')}
+    <rect x="0" y="600" width="1200" height="200" fill="url(#fade)"/>
+  </svg>`;
+}
+
+function svgBanner(seed){
+  const rows = 3, cols = 12;
+  let gears = '';
+  for(let r=0;r<rows;r++){
+    for(let c=0;c<cols;c++){
+      const cx = (c+0.5) * (1200/cols);
+      const cy = 60 + r*90 + ((c+seed)%3)*14;
+      const rad = 10 + ((c+r+seed)%4)*4;
+      gears += `<circle cx="${cx}" cy="${cy}" r="${rad}" fill="none" stroke="#4a5058" stroke-opacity="0.22" stroke-width="1"/>`;
+    }
+  }
+  const dripX = 80 + (seed*137)%1040;
+  return `<svg viewBox="0 0 1200 300" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="bg${seed}" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#160c0d"/>
+        <stop offset="55%" stop-color="#0b0b0d"/>
+        <stop offset="100%" stop-color="#1a0d0e"/>
+      </linearGradient>
+      <linearGradient id="streak${seed}" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#d81e2c" stop-opacity="0.9"/>
+        <stop offset="100%" stop-color="#d81e2c" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    <rect width="1200" height="300" fill="url(#bg${seed})"/>
+    ${gears}
+    <rect x="${dripX}" y="0" width="3" height="300" fill="url(#streak${seed})"/>
+    <rect x="${dripX+260}" y="0" width="2" height="180" fill="url(#streak${seed})" opacity="0.6"/>
+    <line x1="0" y1="150" x2="1200" y2="150" stroke="#d81e2c" stroke-opacity="0.15" stroke-width="1"/>
+  </svg>`;
+}
+
+const weaponIcons = {
+  revolver: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 26h20l6-8h8v6h4v6h-4l-2 6H16l-4-4H6z" stroke="#ece7da" stroke-width="2" stroke-linejoin="round"/><circle cx="14" cy="26" r="2" fill="#d81e2c"/></svg>`,
+  shotgun: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="22" width="30" height="5" stroke="#ece7da" stroke-width="2"/><rect x="34" y="20" width="10" height="9" stroke="#ece7da" stroke-width="2"/><path d="M4 27l10 8h10l-4-8" stroke="#ece7da" stroke-width="2" stroke-linejoin="round"/><circle cx="40" cy="24" r="2" fill="#d81e2c"/></svg>`,
+  nailgun: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="8" y="20" width="26" height="10" rx="2" stroke="#ece7da" stroke-width="2"/><line x1="34" y1="22" x2="44" y2="22" stroke="#d81e2c" stroke-width="2"/><line x1="34" y1="26" x2="44" y2="26" stroke="#d81e2c" stroke-width="2"/><line x1="34" y1="30" x2="42" y2="30" stroke="#d81e2c" stroke-width="2"/></svg>`,
+  railcannon: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="6" y="23" width="28" height="4" stroke="#ece7da" stroke-width="2"/><path d="M32 18h8v12h-8z" stroke="#ece7da" stroke-width="2"/><line x1="40" y1="25" x2="46" y2="25" stroke="#f2c14e" stroke-width="3"/></svg>`,
+  knuckleblaster: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 28c0-6 5-10 11-10h4c5 0 8 3 8 7v4c0 4-3 7-7 7H18l-8-4z" stroke="#ece7da" stroke-width="2" stroke-linejoin="round"/><circle cx="34" cy="26" r="2" fill="#d81e2c"/></svg>`
+};
+
+/* ---------------- CONTENT ---------------- */
+const CONTENT = {
+fa: {
+  dir:'rtl', bodyClass:'lang-fa',
+  meta:{ title:'ULTRAKILL // خون سوخت است', styleLabel:'STYLE' },
+  hero:{
+    eyebrow:'V1 // MINOS PRIME // DIVISION 1',
+    sub:'یک ربات جنگی بازنشسته از انبار بیرون کشیده می‌شود و به جهنم فرستاده می‌شود تا خون لعنت‌شدگان را برداشت کند. او با خشونت زنده می‌ماند. این صفحه هم همین‌طور — به اسکرول‌کردن ادامه بده و ببین رتبه‌ات چطور بالا می‌رود.',
+    fine:[ ['سازنده','Hakita / Arsi "Hakita" Patala'], ['موتور بازی','Godot'], ['ژانر','شوتر اول‌شخص فوق‌سریع با حال‌وهوای رترو'], ['وضعیت','Early Access'] ]
+  },
+  about:{
+    eyebrow:'پیش‌زمینه', h2:'خون سوخت است',
+    lede:'بشریت منقرض شده. تمام بانک‌های خون دنیا خشک شده‌اند و تنها یک منبع باقی مانده: خودِ جهنم. <strong>وی-۱</strong>، یک ماشین جنگی بازنشسته، به دنیای زیرین اعزام می‌شود با یک ماموریت ساده — برای خون بکش، و با نوشیدن خونی که می‌ریزی زنده بمان.',
+    p2:'هر رویارویی حول محور شتاب ساخته شده. تنها شکست واقعی، توقف‌کردن است: دشمن‌ها بی‌حرکتی را مجازات می‌کنند، عرصه‌ها برای حرکت عمودی طراحی شده‌اند، و سیستم مبارزه به‌جای خالی‌کردن یک شارژر روی یک دشمن، به زنجیره‌کردن ضربه‌ها بین سلاح‌های مختلف پاداش می‌دهد.',
+    stats:[ ['چرخه‌ی اصلی','کشتن ← برداشت خون ← زنده‌ماندن'], ['حرکت','دش، اسلاید، سواری روی موشک، پرش با پری'], ['درمان','فقط از خون دشمن، هنگام ضربه'], ['امتیازدهی','متر سبک، رتبه‌بندی در هر مرحله'], ['ساختار','اکت‌ها، تقسیم‌شده به مراحل شماره‌دار'], ['فضا','حماسه‌ای کتاب‌مقدسی، کاملاً جدی روایت‌شده'] ]
+  },
+  banner1:'RANDOM VISUAL // 01',
+  story:{
+    eyebrow:'روایت', h2:'داستان بازی، از ابتدا تا اکنون',
+    p:'خلاصه‌ای غیررسمی از خط داستانی — تا جایی که بازی تا امروز پیش رفته، بدون لو دادن جزئیات پایانی.',
+    beats:[
+      ['۰۱','انقراض بشریت','در آینده‌ای دور، انسان‌ها از بین رفته‌اند. منبع اصلی بقا برای هر چیزی که هنوز کار می‌کند — خون — تمام شده. آخرین ذخیره‌ی شناخته‌شده در اعماق جهنم قرار دارد.'],
+      ['۰۲','بیدارشدن وی-۱','یک ماشین جنگی قدیمی و از رده‌خارج، به نام وی-۱، از انبار بیرون آورده و دوباره فعال می‌شود. وظیفه‌اش ساده تعریف شده: پایین برو، بکش، خون را برای بقای بشریتِ باقی‌مانده بالا بیاور.'],
+      ['۰۳','جهنمی که خالی نیست','جهنم بازیکن را منتظر یک نبرد ساده نمی‌گذارد. موجودات، فرشتگان سقوط‌کرده و ماشین‌های جنگی دیگری از قبل آنجا هستند و هرکدام قلمرو و قوانین خودشان را دارند که ورود وی-۱ آن‌ها را به‌هم می‌ریزد.'],
+      ['۰۴','ماشین‌های رقیب','وی-۱ تنها ماشین جنگی داستان نیست. برخی قدیمی‌تر و قوی‌ترند و بعضی وی-۱ را ابزار می‌بینند، نه تهدید — تا وقتی خلافش ثابت شود.'],
+      ['۰۵','لایه به لایه پایین‌تر','هر لایه‌ای که وی-۱ پشت سر می‌گذارد، سؤال بیشتری درباره‌ی اینکه چرا جهنم به‌عنوان تازه‌ترین منبع خون انتخاب شده و چه کسی واقعاً از این ماجرا سود می‌برد مطرح می‌کند.'],
+      ['۰۶','چیزی که وی-۱ واقعاً هست','هرچه داستان جلوتر می‌رود، اشاره‌های بیشتری پیدا می‌شود که مأموریت وی-۱ فقط «برداشت خون» نیست — و منشأ خودش پیچیده‌تر از چیزی است که در ابتدا به نظر می‌رسید. ادامه‌ی داستان هنوز در حال ساخته‌شدن است.']
+    ]
+  },
+  weapons:{
+    eyebrow:'زرادخانه', h2:'همه‌چیز یک چیز دیگر هم هست',
+    p:'هر سلاح یک آتش-جایگزین دارد که کاربردش را کاملاً عوض می‌کند. نبردها با جابه‌جایی وسط کمبو برنده می‌شوند، نه با انتخاب یک سلاح مورد علاقه و نگه‌داشتن ماشه.',
+    items:[
+      { icon:'revolver', name:'روالور', desc:'سلاح شروع. سریع، دقیق، به‌تنهایی چیز خاصی نیست — تا وقتی آتش-جایگزینش یک شلیک تک را به گلوله‌ای برگشت‌پذیر تبدیل کند که گوشه‌ها را برایت شکار می‌کند.', alt:'آتش-جایگزین · گلوله‌ی برگشت‌پذیر که از دیوارها به سمت نزدیک‌ترین هدف می‌رود', m:[['سرعت',88],['برد',70]] },
+      { icon:'shotgun', name:'شات‌گان', desc:'ویرانی نزدیک‌برد با یک زندگی مخفی دوم: آتش-جایگزینش یک نارنجک خودپیشرو است که می‌توانی مثل سکوی پرش زیر پایت سوارش شوی.', alt:'آتش-جایگزین · گلوله‌ی زمینی که هم‌زمان سکوی پرش زیر پای خودت است', m:[['قدرت',92],['برد',30]] },
+      { icon:'nailgun', name:'نیل‌گان', desc:'جریانی پیوسته از براده‌های فلزی. آتش-جایگزینش هر میخ را با جریان الکتریکی شارژ می‌کند و به تو اجازه می‌دهد کل یک جمعیت را سرجایش نگه داری.', alt:'آتش-جایگزین · شارژ الکتریکی که گروه‌های دشمن را زنجیر و بی‌حرکت می‌کند', m:[['سرعت',75],['کنترل',80]] },
+      { icon:'railcannon', name:'ریل‌کانن', desc:'شلیکی شارژ‌شده و لرزاننده‌ی صفحه که از هر چیزی در یک خط مستقیم عبور می‌کند. سنگین‌ترین چیزی که وی-۱ حمل می‌کند و همین حس را هم می‌دهد.', alt:'آتش-جایگزین · شارژ کامل چند هدف را در یک خط سوراخ می‌کند', m:[['قدرت',100],['سرعت',22]] },
+      { icon:'knuckleblaster', name:'ناکل‌بلستر', desc:'یک اسلحه نیست — یک مشت روی شانه است. نزدیک، موقعیتی، و اغلب پاسخ درست وقتی چیزی بیش‌ازحد نزدیک ایستاده.', alt:'آتش-جایگزین · برخی پرتابه‌ها را به سمت منبعشان برمی‌گرداند', m:[['ضربه',95],['برد',8]] }
+    ]
+  },
+  layersHead:{ eyebrow:'دنیا', h2:'هفت لایه، یک فرود', p:'داستان بازی نقشه‌ای شل از دنیای زیرین کلاسیک را دنبال می‌کند؛ هر لایه با فهرست دشمنان، پالت رنگی و دلیل خودش برای ادامه‌ی حرکت ساخته شده.' },
+  layers:[
+    ['I','لیمبو','آستانه. ویرانه‌های خاکستری و کند که پیش از آنکه چیزی برای کشتنت تلاش کند، حرکت را یادت می‌دهند.','غیرتعمیدشدگان'],
+    ['II','شهوت','اتاق‌های پرآب و شیشه. اولین گذرگاه واقعی — جایی که بازی دیگر درباره‌ی سختی مؤدب نیست.','سرگشتگان'],
+    ['III','پرخوری','پوسیدگی که شکل معماری گرفته. دشمنان اینجا گروهی می‌آیند، برای غرق‌کردن بازیکن کند ساخته شده‌اند.','زیاده‌روها'],
+    ['IV','طمع','سالن‌های طلاکاری‌شده پر از طلایی که اینجا هیچ معنایی ندارد. عمودی، پر از تله، بی‌رحم نسبت به تردید.','احتکارکنندگان'],
+    ['V','خشم','جنگ باز. میدان‌های بزرگ‌تر، ماشین‌های بزرگ‌تر، اولین حسِ اینکه واقعاً کسی این پایین مسئول است.','خشمگینان'],
+    ['VI','بدعت','داستان شروع به پاسخ‌دادن می‌کند. فضاهای استریل و بالینی که عمداً حس اشتباه می‌دهند.','پیامبران دروغین'],
+    ['VII','خشونت','عمیق‌ترین نقطه‌ای که تا الان به آن رسیده‌ای. هر سیستمی که بازی یادت داده، همه با هم ازت خواسته می‌شود.','بی‌رحمان']
+  ],
+  banner2:'RANDOM VISUAL // 02',
+  rank:{
+    eyebrow:'امتیازدهی', h2:'متر سبک، رئیس واقعی است',
+    p:'هر ضربه، کمبو و نجات از مرگ به یک رتبه‌ی زنده تغذیه می‌شود که به‌محض توقف جالب‌بودنت افت می‌کند. اگر با رتبه‌ی پایین مرحله را تمام کنی هنوز بردی — اما هیچ‌کس که این بازی را جدی انجام داده، اسمش را بردن نمی‌گذارد.',
+    cells:[ ['D','قابل‌قبول'],['C','کشتار'],['B','وحشیانه'],['A','هرج‌ومرج‌گونه'],['S','برتر'],['SS','سادیستیک'],['SSS','ULTRAKILL'] ],
+    note:'— متری که به لبه‌ی این صفحه چسبیده، دقیقاً همین‌طور اسکرول تو را دنبال می‌کند. برای رسیدن به SSS تا انتهای صفحه پایین برو.'
+  },
+  ost:{
+    eyebrow:'صدا', h2:'دیستورشن به‌عنوان طراحی مرحله',
+    p:'موسیقی متن بازی توسط تیمی از موزیسین‌های مختلف ساخته شده، نه یک آهنگساز واحد؛ برای همین ریتم بین مرحله‌ها به‌شدت تغییر می‌کند — و بازی به‌جای صاف‌کردنش، آن را می‌پذیرد.',
+    cards:[
+      ['GABBER / SPEEDCORE','ریتم وحشت','برای سریع‌ترین عرصه‌ها استفاده می‌شود، جایی که ضرباهنگ نیمی از کار گفتن به تو برای ادامه‌ی حرکت را انجام می‌دهد.'],
+      ['INDUSTRIAL METAL','ریتم سنگین','برای بزرگ‌ترین ماشین‌های فهرست دشمنان کنار گذاشته شده — سنگین‌تر، کندتر، ساخته‌شده برای اینکه ضربه حس واقعی داشته باشد.'],
+      ['AMBIENT / DRONE','سکوت بین نبردها','فضاهای مرکزی و اتاق‌های داستان، ریتم را نزدیک صفر می‌آورند، که همین باعث می‌شود نبرد بعدی با تضاد قوی‌تر حس شود.']
+    ]
+  },
+  banner3:'RANDOM VISUAL // 03',
+  footer:{ mark:'وی-۱ اینجا بود', p:'صفحه‌ی هوادارانه‌ی غیررسمی. اولتراکیل بازی واقعی‌ای از هاکیتا / نیو بلاد اینتراکتیو است — برو و بازی‌اش کن.' }
+},
+en: {
+  dir:'ltr', bodyClass:'lang-en',
+  meta:{ title:'ULTRAKILL // BLOOD IS FUEL', styleLabel:'STYLE' },
+  hero:{
+    eyebrow:'V1 // MINOS PRIME // DIVISION 1',
+    sub:'A retired combat robot is pulled from storage and sent into Hell to harvest the blood of the damned. It runs on violence. So does this page — keep scrolling and watch your rank climb.',
+    fine:[ ['DEVELOPER','Hakita / Arsi "Hakita" Patala'], ['ENGINE','Godot'], ['GENRE','Ultra-fast retro FPS'], ['STATUS','Early Access'] ]
+  },
+  about:{
+    eyebrow:'Premise', h2:'Blood is fuel',
+    lede:'Mankind is extinct. The world\'s blood banks have run dry, and only one reservoir is left: Hell itself. <strong>V1</strong>, a discontinued war machine, is deployed to the underworld with a single directive — kill for blood, and stay alive by drinking what you spill.',
+    p2:'Every encounter is built around momentum. Standing still is the only real failure state: enemies punish hesitation, arenas are built for vertical movement, and the combat system rewards chaining kills across weapons rather than emptying a single clip.',
+    stats:[ ['CORE LOOP','Kill → harvest blood → survive'], ['MOVEMENT','Dash, slide, rocket-ride, parry-launch'], ['HEALING','Only from enemy blood, on hit'], ['SCORING','Style meter, ranked per level'], ['STRUCTURE','Acts, split into numbered levels'], ['TONE','Biblical epic, played completely straight'] ]
+  },
+  banner1:'RANDOM VISUAL // 01',
+  story:{
+    eyebrow:'Story', h2:'The story so far',
+    p:'An unofficial recap of the plot — as far as the game has gone to date, without spoiling the ending.',
+    beats:[
+      ['01','The extinction','Far in the future, humanity is gone. The one resource everything still running depends on — blood — has run out. The last known reserve sits deep inside Hell.'],
+      ['02','V1 wakes up','An old, decommissioned war machine, V1, is pulled out of storage and reactivated. The job is defined simply: go down, kill, bring blood back up for whatever of humanity is left.'],
+      ['03','Hell was never empty','Hell doesn\'t wait around for a simple fight. Demons, fallen angels, and other war machines already claim territory down there, each with their own rules — and V1 walking in breaks all of it.'],
+      ['04','Rival machines','V1 isn\'t the only war machine in this story. Some are older and stronger, and some see V1 as a tool rather than a threat — until it proves otherwise.'],
+      ['05','Layer by layer, deeper','Every layer V1 clears raises more questions about why Hell was chosen as the newest blood reserve, and who actually benefits from that.'],
+      ['06','What V1 really is','The further the story goes, the more hints turn up that V1\'s mission was never just "harvest blood" — and that its own origin is more complicated than it first looked. The rest of the story is still being made.']
+    ]
+  },
+  weapons:{
+    eyebrow:'Arsenal', h2:'Everything is also something else',
+    p:'Each weapon has a coin-flip alt-fire that changes what it\'s for entirely. Fights are won by switching mid-combo, not by picking a favorite and holding the trigger.',
+    items:[
+      { icon:'revolver', name:'Revolver', desc:'The starting sidearm. Fast, precise, unremarkable on its own — until its alt-fire turns a single shot into a ricochet that hunts corners for you.', alt:'ALT · Ricochet round, bounces off walls toward the nearest target', m:[['SPEED',88],['RANGE',70]] },
+      { icon:'shotgun', name:'Shotgun', desc:'Close-range devastation with a secret double life: its alt-fire is a self-propelling grenade you can ride into the air like a launchpad.', alt:'ALT · Ground-slam projectile, doubles as a jump pad under your own feet', m:[['POWER',92],['RANGE',30]] },
+      { icon:'nailgun', name:'Nailgun', desc:'A sustained stream of shrapnel. Its alt-fire charges every nail with an electric current, letting you juggle a whole crowd in place.', alt:'ALT · Electric overcharge, chains and stuns groups of enemies', m:[['SPEED',75],['CONTROL',80]] },
+      { icon:'railcannon', name:'Railcannon', desc:'A charged, screen-shaking shot that punches clean through anything in a straight line. The heaviest thing V1 carries, and it feels like it.', alt:'ALT · Full charge pierces multiple targets in one line', m:[['POWER',100],['SPEED',22]] },
+      { icon:'knuckleblaster', name:'Knuckleblaster', desc:'Not a gun — a shoulder-mounted punch. Point-blank, situational, and often the correct answer when something is standing too close for comfort.', alt:'ALT · Parries certain projectiles back at their source', m:[['IMPACT',95],['RANGE',8]] }
+    ]
+  },
+  layersHead:{ eyebrow:'World', h2:'Seven layers, one descent', p:'The campaign follows a loose map of the classical underworld, each layer built around its own enemy roster, palette, and reason to keep moving.' },
+  layers:[
+    ['I','Limbo','The threshold. Slow, grey ruins that teach movement before anything tries to kill you for standing still.','the unbaptized'],
+    ['II','Lust','Flooded chambers and glass. The first real gauntlet — where the game stops being polite about difficulty.','the wayward'],
+    ['III','Gluttony','Rot given architecture. Enemies here come in swarms built to overwhelm a slow player.','the excessive'],
+    ['IV','Greed','Gilded halls stacked with gold that means nothing here. Vertical, trap-laced, unkind to hesitation.','the hoarding'],
+    ['V','Wrath','Open war. Bigger arenas, bigger machines, the first sense that something is actually in charge down here.','the furious'],
+    ['VI','Heresy','The lore starts talking back. Sterile, clinical spaces that feel wrong on purpose.','the false prophets'],
+    ['VII','Violence','The deepest point reached so far. Every system the game taught you, asked of you at once.','the merciless']
+  ],
+  banner2:'RANDOM VISUAL // 02',
+  rank:{
+    eyebrow:'Scoring', h2:'The style meter is the real boss',
+    p:'Every kill, combo, and near-miss feeds a live rank that decays the moment you stop being interesting. Survive with a low rank and you still cleared the level — but nobody who\'s played it calls that a win.',
+    cells:[ ['D','DECENT'],['C','CARNAGE'],['B','BRUTAL'],['A','ANARCHIC'],['S','SUPREME'],['SS','SADISTIC'],['SSS','ULTRAKILL'] ],
+    note:'— the meter fixed to the edge of this page is tracking your scroll the same way. Reach the bottom to hit SSS.'
+  },
+  ost:{
+    eyebrow:'Sound', h2:'Distortion as level design',
+    p:'The soundtrack is built by a rotating team of contributing musicians rather than one composer, so the tempo shifts hard between levels — and the game leans into that instead of smoothing it over.',
+    cards:[
+      ['GABBER / SPEEDCORE','The panic tempo','Used for the fastest arenas, where the BPM is doing half the job of telling you to keep moving.'],
+      ['INDUSTRIAL METAL','The weight tempo','Reserved for the biggest machines in the roster — heavier, slower, built to make impact feel earned.'],
+      ['AMBIENT / DRONE','The quiet between fights','Hub spaces and lore rooms drop the tempo to near-zero, which makes the next fight land harder by contrast.']
+    ]
+  },
+  banner3:'RANDOM VISUAL // 03',
+  footer:{ mark:'V1 WAS HERE', p:'Unofficial fan page. ULTRAKILL is a real game by Hakita / New Blood Interactive — go play it.' }
+}
+};
+
+/* ---------------- RENDER ---------------- */
+function render(lang){
+  const c = CONTENT[lang];
+  document.title = c.meta.title;
+  document.getElementById('html-root').setAttribute('lang', lang);
+  document.getElementById('html-root').setAttribute('dir', c.dir);
+  document.body.className = c.bodyClass;
+  document.querySelectorAll('#lang-toggle button').forEach(b=>b.classList.toggle('active', b.dataset.lang===lang));
+
+  const app = document.getElementById('app');
+  app.innerHTML = `
+  <header class="hero">
+    <div class="hero-svg">${svgHeroBg()}</div>
+    <div class="wrap hero-inner">
+      <div class="eyebrow">${c.hero.eyebrow}</div>
+      <h1 class="brand"><span>ULTRA</span><span>KILL</span></h1>
+      <p class="sub">${c.hero.sub}</p>
+      <div class="fine">
+        ${c.hero.fine.map(([k,v])=>`<div class="item">${k}<b class="${/^[A-Za-z0-9 "'\/.]+$/.test(v)?'ltr':''}">${v}</b></div>`).join('')}
+      </div>
+    </div>
+    <div class="drip" style="inset-inline-start:12%; animation-delay:0s;"></div>
+    <div class="drip" style="inset-inline-start:34%; animation-delay:1.1s;"></div>
+    <div class="drip" style="inset-inline-start:61%; animation-delay:0.5s;"></div>
+    <div class="drip" style="inset-inline-start:82%; animation-delay:1.8s;"></div>
+  </header>
+
+  <section>
+    <div class="wrap">
+      <div class="section-head">
+        <div class="eyebrow">${c.about.eyebrow}</div>
+        <h2>${c.about.h2}</h2>
+      </div>
+      <div class="about-grid">
+        <div>
+          <p class="lede">${c.about.lede}</p>
+          <p style="margin-top:20px; color:var(--bone-dim);">${c.about.p2}</p>
+        </div>
+        <div class="stat-block">
+          ${c.about.stats.map(([k,v])=>`<div class="stat-row"><span class="k">${k}</span><span class="v">${v}</span></div>`).join('')}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="svg-banner">${svgBanner(3)}<span class="caption">${c.banner1}</span></div>
+
+  <section>
+    <div class="wrap">
+      <div class="section-head">
+        <div class="eyebrow">${c.story.eyebrow}</div>
+        <h2>${c.story.h2}</h2>
+        <p>${c.story.p}</p>
+      </div>
+      <div class="story-list">
+        ${c.story.beats.map(([idx,title,body])=>`
+          <div class="story-beat">
+            <span class="idx">${idx}</span>
+            <div><h3>${title}</h3><p>${body}</p></div>
+          </div>`).join('')}
+      </div>
+    </div>
+  </section>
+
+  <section class="dark-red">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="eyebrow">${c.weapons.eyebrow}</div>
+        <h2>${c.weapons.h2}</h2>
+        <p>${c.weapons.p}</p>
+      </div>
+      <div class="weapon-list">
+        ${c.weapons.items.map((w,i)=>`
+          <div class="weapon">
+            <span class="icon">${weaponIcons[w.icon]}</span>
+            <span class="num">0${i+1}</span>
+            <div>
+              <h3>${w.name}</h3>
+              <p class="desc">${w.desc}</p>
+              <p class="altfire">${w.alt}</p>
+            </div>
+            <div class="meter-set">
+              ${w.m.map(([label,pct])=>`<div class="meter"><span class="m-label">${label}</span><div class="m-track"><div class="m-fill" style="--pct:${pct}%"></div></div></div>`).join('')}
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="section-head">
+        <div class="eyebrow">${c.layersHead.eyebrow}</div>
+        <h2>${c.layersHead.h2}</h2>
+        <p>${c.layersHead.p}</p>
+      </div>
+      <div class="layers">
+        ${c.layers.map(([roman,name,desc,sin])=>`
+          <div class="layer">
+            <div><span class="roman">${roman}</span><h3>${name}</h3><p>${desc}</p></div>
+            <span class="sin">${sin}</span>
+          </div>`).join('')}
+      </div>
+    </div>
+  </section>
+
+  <div class="svg-banner">${svgBanner(7)}<span class="caption">${c.banner2}</span></div>
+
+  <section class="dark-red">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="eyebrow">${c.rank.eyebrow}</div>
+        <h2>${c.rank.h2}</h2>
+        <p>${c.rank.p}</p>
+      </div>
+      <div class="rank-explainer">
+        ${c.rank.cells.map(([letter,name],i)=>`<div class="cell ${i===6?'active-gold':''}"><div class="letter">${letter}</div><div class="name">${name}</div></div>`).join('')}
+      </div>
+      <p style="margin-top:22px; color:var(--bone-dim); font-size:14px;">${c.rank.note}</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="section-head">
+        <div class="eyebrow">${c.ost.eyebrow}</div>
+        <h2>${c.ost.h2}</h2>
+        <p>${c.ost.p}</p>
+      </div>
+      <div class="ost-grid">
+        ${c.ost.cards.map(([genre,title,desc])=>`
+          <div class="ost-card">
+            <div class="genre">${genre}</div>
+            <h3>${title}</h3>
+            <p>${desc}</p>
+          </div>`).join('')}
+      </div>
+    </div>
+  </section>
+
+  <div class="svg-banner">${svgBanner(11)}<span class="caption">${c.banner3}</span></div>
+
+  <footer>
+    <div class="wrap">
+      <div class="mark">${c.footer.mark}</div>
+      <p>${c.footer.p}</p>
+    </div>
+  </footer>
+  `;
+
+  document.getElementById('style-meter').querySelector('.label').textContent = c.meta.styleLabel;
+}
+
+/* ---------------- STYLE METER SCROLL LOGIC ---------------- */
+(function(){
+  const meter = document.getElementById('style-meter');
+  const bar = document.getElementById('bar-fill');
+  const rankEl = document.getElementById('rank-letter');
+  const ranks = ['D','C','B','A','S','SS','SSS'];
+  let lastRank = 'D';
+
+  function update(){
+    const scrollTop = window.scrollY || document.documentElement.scrollTop;
+    const max = document.documentElement.scrollHeight - window.innerHeight;
+    const pct = max > 0 ? Math.min(1, Math.max(0, scrollTop / max)) : 0;
+    bar.style.height = (pct * 100).toFixed(1) + '%';
+    const idx = Math.min(ranks.length - 1, Math.floor(pct * ranks.length));
+    const rank = ranks[idx];
+    if(rank !== lastRank){
+      rankEl.textContent = rank;
+      meter.classList.add('pulse');
+      setTimeout(()=>meter.classList.remove('pulse'), 350);
+      lastRank = rank;
+    }
+    meter.classList.toggle('rank-sss', rank === 'SSS');
+  }
+  window.addEventListener('scroll', update, {passive:true});
+  window.addEventListener('resize', update);
+  window.__ultrakillMeterUpdate = update;
+})();
+
+/* ---------------- LANG TOGGLE ---------------- */
+document.querySelectorAll('#lang-toggle button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    render(btn.dataset.lang);
+    window.__ultrakillMeterUpdate();
+  });
+});
+
+render('fa');
+window.__ultrakillMeterUpdate();
+</script>
+
+</body>
+</html>
